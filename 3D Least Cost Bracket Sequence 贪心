@@ -1,0 +1,75 @@
+Description
+This is yet another problem on regular bracket sequences.
+A bracket sequence is called regular, if by inserting "+" and "1" into it we get a correct mathematical expression. For example, sequences "(())()", "()" and "(()(()))" are regular, while ")(", "(()" and "(()))(" are not. You have a pattern of a bracket sequence that consists of characters "(", ")" and "?". You have to replace each character "?" with a bracket so, that you get a regular bracket sequence.
+For each character "?" the cost of its replacement with "(" and ")" is given. Among all the possible variants your should choose the cheapest.
+
+Input
+The first line contains a non-empty pattern of even length, consisting of characters "(", ")" and "?". Its length doesn't exceed 5·104. Then there follow m lines, where m is the number of characters "?" in the pattern. Each line contains two integer numbers ai and bi (1 ≤ ai,  bi ≤ 106), where ai is the cost of replacing the i-th character "?" with an opening bracket, and bi — with a closing one.
+
+Output
+Print the cost of the optimal regular bracket sequence in the first line, and the required sequence in the second.
+Print -1, if there is no answer. If the answer is not unique, print any of them.
+
+Examples
+input
+(??)
+1 2
+2 8
+output
+4
+()()
+
+基本思路：
+一开始自然而然想到dp，但是仔细考虑下发现有后效性，所以无法用dp.
+既然不是dp,再想就想到贪心，至于贪心怎么贪
+1.这类括号匹配问题，贪心的话就是用一个cnt计数，用一个flag记录是否可解.
+2.然后就是如何贪心的问题了，这里在循环扫一遍的过程中每次遇到'?'就置为')',(估计这也是个套路吧)
+3.用一个优先队列存一个pair,这个pair的first用来存放')'和'('的代价差，然后second存的是-i(i是当前扫到的位置),
+一旦遇到处理完当前i后cnt>0的情况，就开始从优先队列里出，然后将'('变为')',并从代价中-first，cnt-=2
+至于为什么这样，当代价相同时，肯定是i越早越好，优先队列默然出大的，然后去一下相反数，原先小的不就大了嘛
+4.最重要一点,这样做如果拆掉了前面已经匹配好的会不会造成flag=true，会不会造成之后flag=true，关于这一点
+可以举一下例子，发现总不会出现这样的情况而且总能保证最优，有兴趣的可以证明一下，至此，这个题目解决了。
+
+代码如下：
+#include<bits/stdc++.h>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int> pii;
+#define maxn 100000
+char s[maxn];
+int main(){
+    while(~scanf("%s",s)){
+        int len=strlen(s);
+        priority_queue<pii>pq;
+        int cnt=0;
+        ll ans=0;
+        bool flag=false;
+        for(int i=0;i<len;i++){
+            if(s[i]=='(') cnt--;
+            else if(s[i]==')') cnt++;
+            else{
+                int u,v;
+                scanf("%d%d",&u,&v);
+                s[i]=')';
+                cnt++;
+                ans+=v;
+                pq.push(pii(v-u,-i));
+            }
+            if(cnt>0){
+                if(!pq.empty()){
+                    pii t=pq.top();pq.pop();
+                    ans-=t.first;
+                    s[-t.second]='(';
+                    cnt-=2;
+                }else{
+                    flag=true;
+                }
+            }
+        }
+        if(flag||cnt) printf("-1\n");
+        else printf("%I64d\n%s",ans,s);
+    }
+    return 0;
+}
