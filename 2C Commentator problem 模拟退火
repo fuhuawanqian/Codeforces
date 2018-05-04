@@ -1,0 +1,91 @@
+The Olympic Games in Bercouver are in full swing now. Here everyone has their own objectives: sportsmen compete for medals, and sport commentators compete for more convenient positions to give a running commentary. Today the main sport events take place at three round stadiums, and the commentator's objective is to choose the best point of observation, that is to say the point from where all the three stadiums can be observed. As all the sport competitions are of the same importance, the stadiums should be observed at the same angle. If the number of points meeting the conditions is more than one, the point with the maximum angle of observation is prefered.
+Would you, please, help the famous Berland commentator G. Berniev to find the best point of observation. It should be noted, that the stadiums do not hide each other, the commentator can easily see one stadium through the other.
+
+Input
+The input data consists of three lines, each of them describes the position of one stadium. The lines have the format x,  y,  r, where (x, y) are the coordinates of the stadium's center ( -  103 ≤ x,  y ≤ 103), and r (1 ≤ r  ≤ 103) is its radius. All the numbers in the input data are integer, stadiums do not have common points, and their centers are not on the same line.
+
+Output
+Print the coordinates of the required point with five digits after the decimal point. If there is no answer meeting the conditions, the program shouldn't print anything. The output data should be left blank.
+
+Examples
+input
+0 0 10
+60 0 10
+30 30 10
+output
+30.00000 0.00000
+
+基本思路：
+模拟退火
+基本步骤：
+1.设定一个初始解
+2.在当前解的周围移动，按照评估函数判断是否选取，以此突破局部最优解，得到全局最优解
+3.重复步骤2多次(自己估计着来)
+
+模拟退火算法是一种随机算法，并不一定能找到全局的最优解，
+可以比较快的找到问题的近似最优解。 
+如果参数设置得当，模拟退火算法搜索效率比穷举法要高。
+
+下面的题解严格来讲不叫模拟退火算法，应该叫爬山法，因为没有评估函数，所以一般来说很难得到全局最优解，
+但是通过合理得调整步长，大多数情况下能够得到全局最优解，起码过这个题没有什么问题
+
+代码如下：
+#include<bits/stdc++.h>
+
+using namespace std;
+
+#define maxn 100000
+const int dx[4]={0,0,-1,1};
+const int dy[4]={-1,1,0,0};
+struct Point{
+    double x,y,r;
+}p[5];
+double ang[5];
+double dis(double x,double y,double xx,double yy){
+    return sqrt((x-xx)*(x-xx)+(y-yy)*(y-yy));
+}
+double cal(double x,double y){
+    for(int i=0;i<3;i++){
+        ang[i]=dis(p[i].x,p[i].y,x,y)/p[i].r;
+    }
+    double err=0;
+    for(int i=0;i<3;i++){
+        err+=(ang[i]-ang[(i+1)%3])*(ang[i]-ang[(i+1)%3]);
+    }
+    return err;
+}
+int main(){
+    double ansx=0,ansy=0;
+    for(int i=0;i<3;i++){
+        scanf("%lf%lf%lf",&p[i].x,&p[i].y,&p[i].r);
+        ansx+=p[i].x/3;ansy+=p[i].y/3;
+    }
+    double err=cal(ansx,ansy);
+    double step=1.0;
+    for(int i=1;i<=maxn;i++){
+        bool flag=false;
+        double x,y;
+        Point t;
+        for(int j=0;j<4;j++){
+            t.x=ansx+dx[j]*step;
+            t.y=ansy+dy[j]*step;
+            double tp=cal(t.x,t.y);
+            if(tp<err){
+                err=tp;
+                x=t.x;
+                y=t.y;
+                flag=true;
+            }
+        }
+        if(flag){
+            ansx=x;
+            ansy=y;
+        }else{
+            step/=2;
+        }
+    }
+    if(err<1e-6){
+        printf("%.5lf %.5lf\n",ansx,ansy);
+    }
+    return 0;
+}
